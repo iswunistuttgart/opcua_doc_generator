@@ -1,0 +1,28 @@
+{
+  "name": "cs_template_generator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Sebastian Friedl (ISW, University Stuttgart)",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^15.12.5",
+    "@types/xlsx": "0.0.36",
+    "@types/xml2js": "^0.4.8",
+    "docx-templates": "^4.6.3",
+    "docxtemplater": "^3.22.2",
+    "libxmljs": "^0.19.7",
+    "pizzip": "^3.0.6",
+    "sxml": "^1.0.4",
+    "xlsx": "^0.17.0",
+    "xml2js": "^0.4.23",
+    "yargs": "^17.0.1"
+  },
+  "devDependencies": {
+    "@types/yargs": "^17.0.2"
+  }
+}

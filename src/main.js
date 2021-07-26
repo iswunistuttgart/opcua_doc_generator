@@ -36,24 +36,23 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-//import fs = require("fs");
 var fs_1 = require("fs");
 var objectTypeTable_1 = require("./objectTypeTable");
 var objectTypeTableChildRow_1 = require("./objectTypeTableChildRow");
 var xml2js = require("xml2js");
 var xlsx = require("xlsx");
+var helpers_1 = require("yargs/helpers");
+var yargs = require("yargs");
 var PizZip = require('pizzip');
 var Docxtemplater = require('docxtemplater');
 function extractObjectTypeTables(nodesetXML, instancenodes, tables, nodes_description) {
     console.log("ObjectTypes found: ", nodesetXML.UANodeSet.UAObjectType.length);
     nodesetXML.UANodeSet.UAObjectType.forEach(function (objectType) {
-        //console.log(objectType.$.BrowseName)
+        console.log(objectType);
         var table = new objectTypeTable_1.objectTypeTable();
         table.browseName = objectType.$.BrowseName;
-        //console.log(objectType.References[0].Reference)
         if (objectType.References[0].Reference !== undefined) {
             objectType.References[0].Reference.forEach(function (child) {
-                //console.log(child)
                 if (child.$.ReferenceType == "HasSubtype") {
                     if (child.$.IsForward == "false") {
                         table.superType = child._;
@@ -91,49 +90,51 @@ function extractObjectTypeTables(nodesetXML, instancenodes, tables, nodes_descri
                         default:
                             row.modelingrule = modelingRuleNode._;
                     }
-                    var NodeTypeId = childNode.References[0].Reference.find(function (e) { return e.$.ReferenceType == "HasTypeDefinition"; });
-                    switch (NodeTypeId._) {
-                        case 'i=68':
-                            row.typedefinition = "PropertyType";
-                            break;
-                        case 'i=58':
-                            row.typedefinition = "BaseObjectType";
-                            break;
-                        case 'i=63':
-                            row.typedefinition = "BaseDataVariableType";
-                            break;
-                        case 'i=2376':
-                            row.typedefinition = "MultiStateDiscreteType";
-                            break;
-                        case 'i=17497':
-                            row.typedefinition = "AnalogUnitType";
-                            break;
-                        case 'i=11575':
-                            row.typedefinition = "FileType";
-                            break;
-                        case 'ns=2;i=44':
-                            row.typedefinition = "FileType";
-                            break;
-                        case 'ns=2;i=7':
-                            row.typedefinition = "NotificationType";
-                            break;
-                        case 'ns=2;i=21':
-                            row.typedefinition = "2:ProductionType";
-                            break;
-                        case 'ns=2;i=44':
-                            row.typedefinition = "ToolListType";
-                            break;
-                        case 'ns=4;i=1004':
-                            row.typedefinition = "MachineryItemIdentificationType";
-                            break;
-                        default:
-                            var NodeType = instancenodes.find(function (e) { return e.$.NodeId == NodeTypeId._; });
-                            if (NodeType == undefined) {
-                                console.log("No BrowseName for Type of Node %s is found", NodeTypeId);
-                            }
-                            else {
-                                row.typedefinition = NodeType.$.BrowseName;
-                            }
+                    if (row.nodeClass == "UAMethod") {
+                        row.typedefinition = "";
+                    }
+                    else {
+                        var NodeTypeId = childNode.References[0].Reference.find(function (e) { return e.$.ReferenceType == "HasTypeDefinition"; });
+                        switch (NodeTypeId._) {
+                            case 'i=68':
+                                row.typedefinition = "PropertyType";
+                                break;
+                            case 'i=58':
+                                row.typedefinition = "BaseObjectType";
+                                break;
+                            case 'i=63':
+                                row.typedefinition = "BaseDataVariableType";
+                                break;
+                            case 'i=2376':
+                                row.typedefinition = "MultiStateDiscreteType";
+                                break;
+                            case 'i=17497':
+                                row.typedefinition = "AnalogUnitType";
+                                break;
+                            case 'i=11575':
+                                row.typedefinition = "FileType";
+                                break;
+                            case 'ns=2;i=7':
+                                row.typedefinition = "NotificationType";
+                                break;
+                            case 'ns=2;i=21':
+                                row.typedefinition = "2:ProductionType";
+                                break;
+                            case 'ns=2;i=44':
+                                row.typedefinition = "ToolListType";
+                                break;
+                            case 'ns=4;i=1004':
+                                row.typedefinition = "MachineryItemIdentificationType";
+                                break;
+                            default:
+                                var NodeType = instancenodes.find(function (e) { return e.$.NodeId == NodeTypeId._; });
+                                if (NodeType == undefined) {
+                                    console.log("No BrowseName for Type of Node %s is found", NodeTypeId);
+                                }
+                                else {
+                                    row.typedefinition = NodeType.$.BrowseName;
+                                }
+                        }
                     }
                     table.childrows.push(row);
                 }
@@ -153,26 +154,36 @@ function loadModel(file) {
                     return [4 /*yield*/, parser.parseStringPromise(file)];
                 case 1:
                     nodesetXML = _a.sent();
-                    nodesetXML.UANodeSet.UAVariable.forEach(function (e) { return e.NodeClass = "UAVariable"; });
-                    nodesetXML.UANodeSet.UAObject.forEach(function (e) { return e.NodeClass = "UAObject"; });
+                    if (nodesetXML.UANodeSet.UAVariable !== undefined) {
+                        nodesetXML.UANodeSet.UAVariable.forEach(function (e) { return e.NodeClass = "UAVariable"; });
+                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariable);
+                    }
+                    if (nodesetXML.UANodeSet.UAObject !== undefined) {
+                        nodesetXML.UANodeSet.UAObject.forEach(function (e) { return e.NodeClass = "UAObject"; });
+                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObject);
+                    }
                     if (nodesetXML.UANodeSet.UAMethod !== undefined) {
                         nodesetXML.UANodeSet.UAMethod.forEach(function (e) { return e.NodeClass = "UAMethod"; });
+                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAMethod);
                     }
-                    nodesetXML.UANodeSet.UADataType.forEach(function (e) { return e.NodeClass = "UADataType"; });
-                    nodesetXML.UANodeSet.UAObjectType.forEach(function (e) { return e.NodeClass = "UAObjectType"; });
-                    nodesetXML.UANodeSet.UAVariableType.forEach(function (e) { return e.NodeClass = "UAVariableType"; });
-                    instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariable);
-                    instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObject);
-                    instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAMethod);
-                    instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UADataType);
-                    instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObjectType);
-                    instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariableType);
+                    if (nodesetXML.UANodeSet.UADataType !== undefined) {
+                        nodesetXML.UANodeSet.UADataType.forEach(function (e) { return e.NodeClass = "UADataType"; });
+                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UADataType);
+                    }
+                    if (nodesetXML.UANodeSet.UAObjectType !== undefined) {
+                        nodesetXML.UANodeSet.UAObjectType.forEach(function (e) { return e.NodeClass = "UAObjectType"; });
+                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObjectType);
+                    }
+                    if (nodesetXML.UANodeSet.UAVariableType !== undefined) {
+                        nodesetXML.UANodeSet.UAVariableType.forEach(function (e) { return e.NodeClass = "UAVariableType"; });
+                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariableType);
+                    }
                     return [2 /*return*/, { instancenodes: instancenodes, nodesetXML: nodesetXML }];
             }
         });
     });
 }
-function generateDocx(data) {
+function generateDocx(data, path, output) {
     return __awaiter(this, void 0, void 0, function () {
         // The error object contains additional information when logged with JSON.stringify (it contains a properties object containing all suberrors).
         function replaceErrors(key, value) {
@@ -199,7 +210,7 @@ function generateDocx(data) {
         var content, zip, doc, buf;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, fs_1.promises.readFile('OPCUA_4_GMS_v01_template.docx', 'binary')];
+                case 0: return [4 /*yield*/, fs_1.promises.readFile(path, 'binary')];
                 case 1:
                     content = _a.sent();
                     zip = new PizZip(content);
@@ -224,7 +235,7 @@ function generateDocx(data) {
                         .generate({ type: 'nodebuffer' });
                     // buf is a nodejs buffer, you can either write it to a file or do anything else with it.
                     console.log("write file");
-                    return [4 /*yield*/, fs_1.promises.writeFile('output.docx', buf)];
+                    return [4 /*yield*/, fs_1.promises.writeFile(output, buf)];
                 case 2:
                     _a.sent();
                     return [2 /*return*/];
@@ -238,10 +249,28 @@ function main() {
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
+                    yargs(helpers_1.hideBin(process.argv))
+                        .option('nodeset', {
+                        alias: 'n',
+                        type: 'string',
+                        description: 'The nodeset for which the documentation is to be generated'
+                    })
+                        .option('template', {
+                        alias: 't',
+                        type: 'string',
+                        description: 'path to the docx template'
+                    })
+                        .option('output', {
+                        alias: 'o',
+                        type: 'string',
+                        description: 'path to the output file',
+                        default: "output.docx"
+                    }).argv;
+                    console.log(yargs.argv);
                     data = Object();
                     objectTypeTable = Array();
                     nodes = Array();
-                    return [4 /*yield*/, fs_1.promises.readFile("opc.ua.gms.nodeset2.xml", 'utf8')];
+                    return [4 /*yield*/, fs_1.promises.readFile(yargs.argv['nodeset'], 'utf8')];
                 case 1:
                     myNodeSetFile = _b.sent();
                     return [4 /*yield*/, loadModel(myNodeSetFile)];
@@ -258,7 +287,7 @@ function main() {
                     //console.log(nodes_description)
                     extractObjectTypeTables(nodesetXML, nodes, objectTypeTable, nodes_description);
                     data.obejctTypes = objectTypeTable;
-                    return [4 /*yield*/, generateDocx(data)];
+                    return [4 /*yield*/, generateDocx(data, yargs.argv['template'], yargs.argv['output'])];
                 case 3:
                     _b.sent();
                     return [2 /*return*/];

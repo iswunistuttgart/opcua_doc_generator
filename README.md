@@ -21,20 +21,21 @@ https://www.npmjs.com/package/xml2js
 https://www.npmjs.com/package/xlsx
 
 ## Example 
-A simple coffee machine OPC UA model we use in our trainings and a simple template based on the OPC UA  Companion Specification template
+A simple coffee machine OPC UA model we use in our trainings, and a simple template based on the OPC UA  Companion Specification template
  run 
-```node main.js -n example/coffeemachine.nodeset2.xml -t example/opcua_template.docx```
+```node main.js -n example/coffeemachine.nodeset2.xml -t example/opcua_template.docx -d example/description.xlsx```
 
 ## How to Customize 
 Copy the example doc file or start with an empty docx file.
-You can add the text between: {#obejctTypes} and {/obejctTypes} will be reapte for each ObejctType.
+You can add the text between: {#objectType} and {/objectType} will be repeated for each ObjectType.
 The following placeholder can insert and will be removed with the value of the ObjectType:
-- {browseName}
+- {browsename}
 - {isAbstract}
 - {superType}
 - {superTypeSrc} (not completed)
-Also you can access childs of the ObjectType insert {childrows}...{/childrows}. Child has the following placeholders:- {browseName}
-- {browseName}
+Also you can access children of the ObjectType insert {childrows}...{/childrows}. Child has the following placeholders:
+- {browsename}
+- {browsename}
 - {nodeClass}
 - {referenceType}
 - {#datatype}{datatype}{/datatype}

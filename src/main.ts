@@ -1,42 +1,43 @@
-import {Argv} from "yargs";
 import {promises as fs} from 'fs';
-import {objectTypeTable} from "./objectTypeTable";
-import {objectTypeTableChildRow} from "./objectTypeTableChildRow";
+import {ObjectTypeDescription} from "./objectTypeDescription";
+import {ObjectTypeChildDescription} from "./objectTypeChildDescription";
 import xml2js = require ("xml2js");
 import xlsx = require("xlsx");
 import {hideBin} from "yargs/helpers";
 import yargs = require("yargs");
 
-var PizZip = require('pizzip');
-var Docxtemplater = require('docxtemplater');
+let PizZip = require('pizzip');
+let Docxtemplater = require('docxtemplater');
 
-function extractObjectTypeTables(nodesetXML, instancenodes, tables: any[], nodes_description) {
+function extractObjectTypeTables(nodesetXML, instanceNodes, tables: any[], nodes_description) {
     console.log("ObjectTypes found: ", nodesetXML.UANodeSet.UAObjectType.length);
     nodesetXML.UANodeSet.UAObjectType.forEach(function (objectType) {
-        console.log(objectType)
-        var table = new objectTypeTable();
-        table.browseName = objectType.$.BrowseName
+        let currentObjectType = new ObjectTypeDescription();
+        currentObjectType.browsename = objectType.$.BrowseName
+        const description = nodes_description.find(e => e.Name == currentObjectType.browsename);
+        if (description != undefined) {
+            currentObjectType.description = description.Description;
+        }
         if (objectType.References[0].Reference !== undefined) {
             objectType.References[0].Reference.forEach(function (child) {
                 if (child.$.ReferenceType == "HasSubtype") {
                     if (child.$.IsForward == "false") {
-                        table.superType = child._
+                        currentObjectType.superType = child._
                     } else {
                         console.warn("Wrong HasSubtype reference");
                     }
                 } else {
-                    var row = new objectTypeTableChildRow();
+                    let row = new ObjectTypeChildDescription();
                     row.referenceType = child.$.ReferenceType
-                    var childNode = instancenodes.find(e => e.$.NodeId == child._);
+                    let childNode = instanceNodes.find(e => e.$.NodeId == child._);
                     row.datatype = childNode.$.DataType;
                     row.browsename = childNode.$.BrowseName;
-                    var description = nodes_description.find(e => e.Name == row.browsename);
-                    console.log(row.browsename, description);
+                    const description = nodes_description.find(e => e.Name == row.browsename);
                     if (description != undefined) {
                         row.description = description.Description;
                     }
                     row.nodeClass = childNode.NodeClass;
-                    var modelingRuleNode = childNode.References[0].Reference.find(e => e.$.ReferenceType == "HasModellingRule")
+                    const modelingRuleNode = childNode.References[0].Reference.find(e => e.$.ReferenceType == "HasModellingRule");
                     switch (modelingRuleNode._) {
                         case 'i=80':
                             row.modelingrule = "Optional"
@@ -56,7 +57,7 @@ function extractObjectTypeTables(nodesetXML, instancenodes, tables: any[], nodes
                     if (row.nodeClass == "UAMethod"){
                         row.typedefinition = ""
                     } else{
-                        var NodeTypeId = childNode.References[0].Reference.find(e => e.$.ReferenceType == "HasTypeDefinition")
+                        const NodeTypeId = childNode.References[0].Reference.find(e => e.$.ReferenceType == "HasTypeDefinition");
                         switch (NodeTypeId._) {
                             case 'i=68':
                                 row.typedefinition = "PropertyType";
@@ -89,7 +90,7 @@ function extractObjectTypeTables(nodesetXML, instancenodes, tables: any[], nodes
                                 row.typedefinition = "MachineryItemIdentificationType";
                                 break;
                             default:
-                                const NodeType = instancenodes.find(e => e.$.NodeId == NodeTypeId._);
+                                const NodeType = instanceNodes.find(e => e.$.NodeId == NodeTypeId._);
                                 if (NodeType == undefined) {
                                     console.log("No BrowseName for Type of Node %s is found", NodeTypeId)
                                 } else {
@@ -97,44 +98,44 @@ function extractObjectTypeTables(nodesetXML, instancenodes, tables: any[], nodes
                                 }
                         }
                     }
-                    table.childrows.push(row);
+                    currentObjectType.childrows.push(row);
 
                 }
             })
         }
-        tables.push(table)
+        tables.push(currentObjectType)
     })
 }
 
 async function loadModel(file: string) {
-    var instancenodes = Array();
-    var parser = new xml2js.Parser(/* options */);
-    var nodesetXML = await parser.parseStringPromise(file);
+    let instanceNodes = Array();
+    const parser = new xml2js.Parser(/* options */);
+    const nodesetXML = await parser.parseStringPromise(file);
     if (nodesetXML.UANodeSet.UAVariable !== undefined) {
         nodesetXML.UANodeSet.UAVariable.forEach(e => e.NodeClass = "UAVariable");
-        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariable);
+        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAVariable);
     }
     if (nodesetXML.UANodeSet.UAObject !== undefined) {
         nodesetXML.UANodeSet.UAObject.forEach(e => e.NodeClass = "UAObject");
-        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObject);
+        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAObject);
     }
     if (nodesetXML.UANodeSet.UAMethod !== undefined) {
         nodesetXML.UANodeSet.UAMethod.forEach(e => e.NodeClass = "UAMethod");
-        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAMethod);
+        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAMethod);
     }
     if (nodesetXML.UANodeSet.UADataType !== undefined) {
         nodesetXML.UANodeSet.UADataType.forEach(e => e.NodeClass = "UADataType");
-        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UADataType);
+        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UADataType);
     }
     if (nodesetXML.UANodeSet.UAObjectType !== undefined) {
         nodesetXML.UANodeSet.UAObjectType.forEach(e => e.NodeClass = "UAObjectType");
-        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObjectType);
+        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAObjectType);
     }
     if (nodesetXML.UANodeSet.UAVariableType !== undefined) {
         nodesetXML.UANodeSet.UAVariableType.forEach(e => e.NodeClass = "UAVariableType");
-        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariableType);
+        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAVariableType);
     }
-    return {instancenodes, nodesetXML};
+    return { instanceNodes, nodesetXML};
 }
 
 async function generateDocx(data, path, output) {
@@ -164,10 +165,10 @@ async function generateDocx(data, path, output) {
     }
 
     // Load the docx file as binary content
-    var content = await fs.readFile(path, 'binary');
+    const content = await fs.readFile(path, 'binary');
 
-    var zip = new PizZip(content);
-    var doc;
+    const zip = new PizZip(content);
+    let doc;
     try {
         doc = new Docxtemplater(zip, {paragraphLoop: true, linebreaks: true});
     } catch (error) {
@@ -186,7 +187,7 @@ async function generateDocx(data, path, output) {
         errorHandler(error);
     }
 
-    var buf = doc.getZip()
+    const buf = doc.getZip()
         .generate({type: 'nodebuffer'});
 
 // buf is a nodejs buffer, you can either write it to a file or do anything else with it.
@@ -212,30 +213,38 @@ async function main() {
             type: 'string',
             description: 'path to the output file',
             default: "output.docx"
+        })
+        .option('description', {
+            alias: 'd',
+            type: 'string',
+            description: 'path to a description excel file',
         }).argv
 
     console.log(yargs.argv)
 
 
-    var data = Object();
-    var objectTypeTable = Array();
-    var nodes = Array();
+    let data = Object();
+    let objectTypeTable = Array();
+    let nodes = Array();
     const myNodeSetFile = await fs.readFile(yargs.argv['nodeset'], 'utf8');
-    var {instancenodes, nodesetXML} = await loadModel(myNodeSetFile);
-    nodes = nodes.concat(instancenodes);
+    let {instanceNodes, nodesetXML} = await loadModel(myNodeSetFile);
+    nodes = nodes.concat(instanceNodes);
 
-    var workbook = xlsx.readFile('parameterlist_v12.xlsx');
-    var nodes_description = Array();
-    for (let i = 1; i < workbook.SheetNames.length; i++) {
-        var sheet = workbook.Sheets[workbook.SheetNames[i]];
-        var json = xlsx.utils.sheet_to_json(sheet);
-        nodes_description = nodes_description.concat(json);
+    let nodes_description = Array();
+    if (yargs.argv['description']) {
+        console.log("Read descirption file")
+        const workbook = xlsx.readFile(yargs.argv['description']);
+        for (let i = 0; i < workbook.SheetNames.length; i++) {
+            const sheet = workbook.Sheets[workbook.SheetNames[i]];
+            const json = xlsx.utils.sheet_to_json(sheet);
+            nodes_description = nodes_description.concat(json);
+        }
     }
-    //console.log(nodes_description)
+    console.log("Found %i descriptions",nodes_description.length)
 
 
     extractObjectTypeTables(nodesetXML, nodes, objectTypeTable, nodes_description);
-    data.obejctTypes = objectTypeTable;
+    data.objectTypes = objectTypeTable;
 
     await generateDocx(data, yargs.argv['template'], yargs.argv['output']);
 

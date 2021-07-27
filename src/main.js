@@ -37,148 +37,150 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var fs_1 = require("fs");
-var objectTypeTable_1 = require("./objectTypeTable");
-var objectTypeTableChildRow_1 = require("./objectTypeTableChildRow");
+var objectTypeDescription_1 = require("./objectTypeDescription");
+var objectTypeChildDescription_1 = require("./objectTypeChildDescription");
 var xml2js = require("xml2js");
 var xlsx = require("xlsx");
 var helpers_1 = require("yargs/helpers");
 var yargs = require("yargs");
 var PizZip = require('pizzip');
 var Docxtemplater = require('docxtemplater');
-function extractObjectTypeTables(nodesetXML, instancenodes, tables, nodes_description) {
+function extractObjectTypeTables(nodesetXML, instanceNodes, tables, nodes_description) {
     console.log("ObjectTypes found: ", nodesetXML.UANodeSet.UAObjectType.length);
     nodesetXML.UANodeSet.UAObjectType.forEach(function (objectType) {
-        console.log(objectType);
-        var table = new objectTypeTable_1.objectTypeTable();
-        table.browseName = objectType.$.BrowseName;
+        var currentObjectType = new objectTypeDescription_1.ObjectTypeDescription();
+        currentObjectType.browsename = objectType.$.BrowseName;
+        var description = nodes_description.find(function (e) { return e.Name == currentObjectType.browsename; });
+        if (description != undefined) {
+            currentObjectType.description = description.Description;
+        }
         if (objectType.References[0].Reference !== undefined) {
             objectType.References[0].Reference.forEach(function (child) {
                 if (child.$.ReferenceType == "HasSubtype") {
                     if (child.$.IsForward == "false") {
-                        table.superType = child._;
+                        currentObjectType.superType = child._;
                     }
                     else {
                         console.warn("Wrong HasSubtype reference");
                     }
                 }
                 else {
-                    var row = new objectTypeTableChildRow_1.objectTypeTableChildRow();
-                    row.referenceType = child.$.ReferenceType;
-                    var childNode = instancenodes.find(function (e) { return e.$.NodeId == child._; });
-                    row.datatype = childNode.$.DataType;
-                    row.browsename = childNode.$.BrowseName;
-                    var description = nodes_description.find(function (e) { return e.Name == row.browsename; });
-                    console.log(row.browsename, description);
-                    if (description != undefined) {
-                        row.description = description.Description;
+                    var row_1 = new objectTypeChildDescription_1.ObjectTypeChildDescription();
+                    row_1.referenceType = child.$.ReferenceType;
+                    var childNode = instanceNodes.find(function (e) { return e.$.NodeId == child._; });
+                    row_1.datatype = childNode.$.DataType;
+                    row_1.browsename = childNode.$.BrowseName;
+                    var description_1 = nodes_description.find(function (e) { return e.Name == row_1.browsename; });
+                    if (description_1 != undefined) {
+                        row_1.description = description_1.Description;
                     }
-                    row.nodeClass = childNode.NodeClass;
+                    row_1.nodeClass = childNode.NodeClass;
                     var modelingRuleNode = childNode.References[0].Reference.find(function (e) { return e.$.ReferenceType == "HasModellingRule"; });
                     switch (modelingRuleNode._) {
                         case 'i=80':
-                            row.modelingrule = "Optional";
+                            row_1.modelingrule = "Optional";
                             break;
                         case 'i=78':
-                            row.modelingrule = "Mandatory";
+                            row_1.modelingrule = "Mandatory";
                             break;
                         case 'i=11508':
-                            row.modelingrule = "OptionalPlaceholder";
+                            row_1.modelingrule = "OptionalPlaceholder";
                             break;
                         case 'i=11510':
-                            row.modelingrule = "MandatoryPlaceholder";
+                            row_1.modelingrule = "MandatoryPlaceholder";
                             break;
                         default:
-                            row.modelingrule = modelingRuleNode._;
+                            row_1.modelingrule = modelingRuleNode._;
                     }
-                    if (row.nodeClass == "UAMethod") {
-                        row.typedefinition = "";
+                    if (row_1.nodeClass == "UAMethod") {
+                        row_1.typedefinition = "";
                     }
                     else {
-                        var NodeTypeId = childNode.References[0].Reference.find(function (e) { return e.$.ReferenceType == "HasTypeDefinition"; });
-                        switch (NodeTypeId._) {
+                        var NodeTypeId_1 = childNode.References[0].Reference.find(function (e) { return e.$.ReferenceType == "HasTypeDefinition"; });
+                        switch (NodeTypeId_1._) {
                             case 'i=68':
-                                row.typedefinition = "PropertyType";
+                                row_1.typedefinition = "PropertyType";
                                 break;
                             case 'i=58':
-                                row.typedefinition = "BaseObjectType";
+                                row_1.typedefinition = "BaseObjectType";
                                 break;
                             case 'i=63':
-                                row.typedefinition = "BaseDataVariableType";
+                                row_1.typedefinition = "BaseDataVariableType";
                                 break;
                             case 'i=2376':
-                                row.typedefinition = "MultiStateDiscreteType";
+                                row_1.typedefinition = "MultiStateDiscreteType";
                                 break;
                             case 'i=17497':
-                                row.typedefinition = "AnalogUnitType";
+                                row_1.typedefinition = "AnalogUnitType";
                                 break;
                             case 'i=11575':
-                                row.typedefinition = "FileType";
+                                row_1.typedefinition = "FileType";
                                 break;
                             case 'ns=2;i=7':
-                                row.typedefinition = "NotificationType";
+                                row_1.typedefinition = "NotificationType";
                                 break;
                             case 'ns=2;i=21':
-                                row.typedefinition = "2:ProductionType";
+                                row_1.typedefinition = "2:ProductionType";
                                 break;
                             case 'ns=2;i=44':
-                                row.typedefinition = "ToolListType";
+                                row_1.typedefinition = "ToolListType";
                                 break;
                             case 'ns=4;i=1004':
-                                row.typedefinition = "MachineryItemIdentificationType";
+                                row_1.typedefinition = "MachineryItemIdentificationType";
                                 break;
                             default:
-                                var NodeType = instancenodes.find(function (e) { return e.$.NodeId == NodeTypeId._; });
+                                var NodeType = instanceNodes.find(function (e) { return e.$.NodeId == NodeTypeId_1._; });
                                 if (NodeType == undefined) {
-                                    console.log("No BrowseName for Type of Node %s is found", NodeTypeId);
+                                    console.log("No BrowseName for Type of Node %s is found", NodeTypeId_1);
                                 }
                                 else {
-                                    row.typedefinition = NodeType.$.BrowseName;
+                                    row_1.typedefinition = NodeType.$.BrowseName;
                                 }
                         }
                     }
-                    table.childrows.push(row);
+                    currentObjectType.childrows.push(row_1);
                 }
             });
         }
-        tables.push(table);
+        tables.push(currentObjectType);
     });
 }
 function loadModel(file) {
     return __awaiter(this, void 0, void 0, function () {
-        var instancenodes, parser, nodesetXML;
+        var instanceNodes, parser, nodesetXML;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    instancenodes = Array();
+                    instanceNodes = Array();
                     parser = new xml2js.Parser( /* options */);
                     return [4 /*yield*/, parser.parseStringPromise(file)];
                 case 1:
                     nodesetXML = _a.sent();
                     if (nodesetXML.UANodeSet.UAVariable !== undefined) {
                         nodesetXML.UANodeSet.UAVariable.forEach(function (e) { return e.NodeClass = "UAVariable"; });
-                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariable);
+                        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAVariable);
                     }
                     if (nodesetXML.UANodeSet.UAObject !== undefined) {
                         nodesetXML.UANodeSet.UAObject.forEach(function (e) { return e.NodeClass = "UAObject"; });
-                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObject);
+                        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAObject);
                     }
                     if (nodesetXML.UANodeSet.UAMethod !== undefined) {
                         nodesetXML.UANodeSet.UAMethod.forEach(function (e) { return e.NodeClass = "UAMethod"; });
-                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAMethod);
+                        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAMethod);
                     }
                     if (nodesetXML.UANodeSet.UADataType !== undefined) {
                         nodesetXML.UANodeSet.UADataType.forEach(function (e) { return e.NodeClass = "UADataType"; });
-                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UADataType);
+                        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UADataType);
                     }
                     if (nodesetXML.UANodeSet.UAObjectType !== undefined) {
                         nodesetXML.UANodeSet.UAObjectType.forEach(function (e) { return e.NodeClass = "UAObjectType"; });
-                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAObjectType);
+                        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAObjectType);
                     }
                     if (nodesetXML.UANodeSet.UAVariableType !== undefined) {
                         nodesetXML.UANodeSet.UAVariableType.forEach(function (e) { return e.NodeClass = "UAVariableType"; });
-                        instancenodes = instancenodes.concat(nodesetXML.UANodeSet.UAVariableType);
+                        instanceNodes = instanceNodes.concat(nodesetXML.UANodeSet.UAVariableType);
                     }
-                    return [2 /*return*/, { instancenodes: instancenodes, nodesetXML: nodesetXML }];
+                    return [2 /*return*/, { instanceNodes: instanceNodes, nodesetXML: nodesetXML }];
             }
         });
     });
@@ -245,7 +247,7 @@ function generateDocx(data, path, output) {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var data, objectTypeTable, nodes, myNodeSetFile, _a, instancenodes, nodesetXML, workbook, nodes_description, i, sheet, json;
+        var data, objectTypeTable, nodes, myNodeSetFile, _a, instanceNodes, nodesetXML, nodes_description, workbook, i, sheet, json;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -265,6 +267,11 @@ function main() {
                         type: 'string',
                         description: 'path to the output file',
                         default: "output.docx"
+                    })
+                        .option('description', {
+                        alias: 'd',
+                        type: 'string',
+                        description: 'path to a description excel file',
                     }).argv;
                     console.log(yargs.argv);
                     data = Object();
@@ -275,18 +282,21 @@ function main() {
                     myNodeSetFile = _b.sent();
                     return [4 /*yield*/, loadModel(myNodeSetFile)];
                 case 2:
-                    _a = _b.sent(), instancenodes = _a.instancenodes, nodesetXML = _a.nodesetXML;
-                    nodes = nodes.concat(instancenodes);
-                    workbook = xlsx.readFile('parameterlist_v12.xlsx');
+                    _a = _b.sent(), instanceNodes = _a.instanceNodes, nodesetXML = _a.nodesetXML;
+                    nodes = nodes.concat(instanceNodes);
                     nodes_description = Array();
-                    for (i = 1; i < workbook.SheetNames.length; i++) {
-                        sheet = workbook.Sheets[workbook.SheetNames[i]];
-                        json = xlsx.utils.sheet_to_json(sheet);
-                        nodes_description = nodes_description.concat(json);
+                    if (yargs.argv['description']) {
+                        console.log("Read descirption file");
+                        workbook = xlsx.readFile(yargs.argv['description']);
+                        for (i = 0; i < workbook.SheetNames.length; i++) {
+                            sheet = workbook.Sheets[workbook.SheetNames[i]];
+                            json = xlsx.utils.sheet_to_json(sheet);
+                            nodes_description = nodes_description.concat(json);
+                        }
                     }
-                    //console.log(nodes_description)
+                    console.log("Found %i descriptions", nodes_description.length);
                     extractObjectTypeTables(nodesetXML, nodes, objectTypeTable, nodes_description);
-                    data.obejctTypes = objectTypeTable;
+                    data.objectTypes = objectTypeTable;
                     return [4 /*yield*/, generateDocx(data, yargs.argv['template'], yargs.argv['output'])];
                 case 3:
                     _b.sent();

@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.objectTypeTable = void 0;
-var objectTypeTable = /** @class */ (function () {
-    function objectTypeTable() {
+exports.ObjectTypeDescription = void 0;
+var ObjectTypeDescription = /** @class */ (function () {
+    function ObjectTypeDescription() {
         this._isAbstract = "False";
+        this._description = "";
         this.childrows = [];
     }
-    Object.defineProperty(objectTypeTable.prototype, "description", {
+    Object.defineProperty(ObjectTypeDescription.prototype, "description", {
         get: function () {
             return this._description;
         },
@@ -16,22 +17,22 @@ var objectTypeTable = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Object.defineProperty(objectTypeTable.prototype, "browseName", {
+    Object.defineProperty(ObjectTypeDescription.prototype, "browsename", {
         get: function () {
-            return this._browseName;
+            return this._browsename;
         },
         set: function (value) {
             if (value.startsWith('1') == true) {
-                this._browseName = value.substring(2);
+                this._browsename = value.substring(2);
             }
             else {
-                this._browseName = value;
+                this._browsename = value;
             }
         },
         enumerable: false,
         configurable: true
     });
-    Object.defineProperty(objectTypeTable.prototype, "isAbstract", {
+    Object.defineProperty(ObjectTypeDescription.prototype, "isAbstract", {
         get: function () {
             return this._isAbstract;
         },
@@ -41,7 +42,7 @@ var objectTypeTable = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Object.defineProperty(objectTypeTable.prototype, "superType", {
+    Object.defineProperty(ObjectTypeDescription.prototype, "superType", {
         get: function () {
             return this._superType;
         },
@@ -51,7 +52,7 @@ var objectTypeTable = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Object.defineProperty(objectTypeTable.prototype, "superTypeSrc", {
+    Object.defineProperty(ObjectTypeDescription.prototype, "superTypeSrc", {
         get: function () {
             return this._superTypeSrc;
         },
@@ -61,7 +62,7 @@ var objectTypeTable = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    return objectTypeTable;
+    return ObjectTypeDescription;
 }());
-exports.objectTypeTable = objectTypeTable;
-//# sourceMappingURL=objectTypeTable.js.map
+exports.ObjectTypeDescription = ObjectTypeDescription;
+//# sourceMappingURL=objectTypeDescription.js.map

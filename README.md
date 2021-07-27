@@ -16,9 +16,9 @@ A scripte to generate a docx documentation from a OPC UA nodeset file
 - other models will not import
 
 ## Dependencies
-https://github.com/open-xml-templating/docxtemplater
-https://www.npmjs.com/package/xml2js
-https://www.npmjs.com/package/xlsx
+- [https://github.com/open-xml-templating/docxtemplater](https://github.com/open-xml-templating/docxtemplater)
+- [https://www.npmjs.com/package/xml2js](https://www.npmjs.com/package/xml2js)
+- [https://www.npmjs.com/package/xlsx](https://www.npmjs.com/package/xml2js)
 
 ## Example 
 A simple coffee machine OPC UA model we use in our trainings, and a simple template based on the OPC UA  Companion Specification template
@@ -33,8 +33,7 @@ The following placeholder can insert and will be removed with the value of the O
 - {isAbstract}
 - {superType}
 - {superTypeSrc} (not completed)
-Also you can access children of the ObjectType insert {childrows}...{/childrows}. Child has the following placeholders:
-- {browsename}
+Also you can access childs of the ObjectType insert {childrows}...{/childrows}. Child has the following placeholders:
 - {browsename}
 - {nodeClass}
 - {referenceType}

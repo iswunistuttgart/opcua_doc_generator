@@ -1,21 +1,31 @@
-import {objectTypeTableChildRow} from "./objectTypeTableChildRow";
+import {DataTypeFieldDescription} from "./dataTypeFieldDescription";
 
-export class objectTypeTable {
-    private _browseName: string
+export class DataTypeDescription {
+    private _browsename: string
     private _isAbstract: string = "False";
     private _superType: string;
     private _superTypeSrc: string;
-    childrows: objectTypeTableChildRow[] = [];
+    private _description: string = "";
 
-    get browseName(): string {
-        return this._browseName;
+    get description(): string {
+        return this._description;
     }
 
-    set browseName(value: string) {
+    set description(value: string) {
+        this._description = value;
+    }
+
+    childrows: DataTypeFieldDescription[] = [];
+
+    get browsename(): string {
+        return this._browsename;
+    }
+
+    set browsename(value: string) {
         if (value.startsWith('1') == true) {
-            this._browseName = value.substring(2);
+            this._browsename = value.substring(2);
         } else {
-            this._browseName = value;
+            this._browsename = value;
         }
     }
 

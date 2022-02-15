@@ -1,9 +1,19 @@
+import {MultiStateValueDiscreteTypeDescription} from "./multiStateValueDiscreteTypeDescription";
+import {MethodDescription} from "./methodDescription";
+import {ObjectDescription} from "./objectDescription";
+import {PropertyDescription} from "./propertyDescription";
+
 export class ObjectTypeChildDescription {
     private _referenceType: string;
     private _nodeClass: string;
     private _browsename: string;
     private _datatype: string;
     private _description: string = "";
+
+    multiStateValue: MultiStateValueDiscreteTypeDescription[] = [];
+    method : MethodDescription[] = [];
+    baseObject: ObjectDescription[] = [];
+    property : PropertyDescription [] = [];
 
     get description(): string {
         return this._description;
